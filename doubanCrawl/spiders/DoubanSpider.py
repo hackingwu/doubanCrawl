@@ -36,15 +36,20 @@ class DoubanSpider(scrapy.Spider):
         item = DoubancrawlItem()
         item['name'] = response.xpath('//div[@id="wrapper"]/h1/span/text()').extract()[0]
         item['cover'] = response.xpath('//div[@id="mainpic"]/a/img/@src').extract()[0]
-        item['content_intro'] = '\n'.join(response.xpath('//div[@id="link-report"]/div/div[@class="intro"]/p/text()').extract())
-        item['author_intro'] = '\n'.join(response.xpath('//div[@class="indent"]/div/div[@class="intro"]/p/text()').extract())
+        intro = response.xpath('//div[@class="intro"]')
+        item['content_intro'] = self.get_content(intro[0])
+        item['author_intro'] = self.get_content(intro[1])
         item['tags'] = response.xpath('//div[@id="db-tags-section"]/div[@class="indent"]/span/a/text()').extract()
-        item['score']=response.xpath('//div[@id="interest_sectl"]/div/div/strong/text()').extract()
-        item['comment_num']=response.xpath('//span/a[@class="rating_people"]/text()').extract()
+        item['score']=response.xpath('//div[@id="interest_sectl"]/div/div/strong/text()').extract()[0]
+        item['comment_num']=response.xpath('//span/a[@class="rating_people"]/text()').extract()[0]
         info_selector = response.xpath('//div[@id="info"]')
         self.fillinfo(item,info_selector)
         self.fillinfo1(item,info_selector)
         yield item
+        items = response.xpath('//a/@href').extract()
+        for i in items:
+            if i.find('http://book.douban.com/subject')>-1:
+                yield scrapy.Request(i,callback=self.parse_item)
 
 
     def invalidastr(self,s):
@@ -58,8 +63,8 @@ class DoubanSpider(scrapy.Spider):
 
         item['publishing_house'] = infotext[0]
         infotext = [x for x in infotext if not self.invalidastr(x)]
-        infospantext = [x for x in infospantext if not self.invalidastr(x)]
-        for i in range(min(len(infotext),len(infospantext))-1):
+        infospantext = [x for x in infospantext if (not self.invalidastr(x) and x.find('丛书')==-1)]
+        for i in range(min(len(infotext),len(infospantext))):
             if infospantext[i].find('出版社')>-1:
                 item['publishing_house']=infotext[i]
             elif infospantext[i].find('原作名')>-1:
@@ -90,3 +95,5 @@ class DoubanSpider(scrapy.Spider):
 
 
 
+    def get_content(self,sel):
+            return '\n'.join(sel.xpath('./p/text()').extract())
