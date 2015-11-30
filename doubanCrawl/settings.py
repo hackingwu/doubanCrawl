@@ -84,4 +84,4 @@ ITEM_PIPELINES = {
 #HTTPCACHE_IGNORE_HTTP_CODES=[]
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-MONGODB_URI='mongodb://hackingwu:wu123456@127.0.0.1:27017/douban?authMechanism=SCRAM_SHA-1'
+MONGODB_URI='mongodb://hackingwu:pwd@127.0.0.1:27017/douban?authMechanism=SCRAM_SHA-1'
