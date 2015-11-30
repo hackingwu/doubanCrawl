@@ -34,7 +34,7 @@ class DoubancrawlPipeline(object):
 
     def process_item(self, item, spider):
         item = dict(item)
-        item_findby_isbn_num = self.db[self.collection_name].count({"ISBN":item.get('ISBN')})
-        # if item_findby_isbn_num ==  0:
-        self.db[self.collection_name].insert(dict(item))
+        item_findby_isbn_num = self.db[self.collection_name].count({"name":item.get('name')})
+        if item_findby_isbn_num ==  0:
+            self.db[self.collection_name].insert(dict(item))
         return item

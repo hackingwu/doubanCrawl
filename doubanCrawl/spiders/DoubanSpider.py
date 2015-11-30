@@ -2,10 +2,13 @@
 __author__ = 'hackingwu'
 
 import scrapy
+import re
 from doubanCrawl.items import DoubancrawlItem
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+
 
 class DoubanSpider(scrapy.Spider):
     name = "douban"
@@ -14,6 +17,7 @@ class DoubanSpider(scrapy.Spider):
         "http://book.douban.com"
     ]
 
+    url_regex = re.compile("http://book.douban.com/subject/\\S+\?from=tag")
 
     def parse(self, response):
         start_urls = response.xpath("//div[@class='aside']/ul/li/ul/li/a/@href").extract()
@@ -25,10 +29,11 @@ class DoubanSpider(scrapy.Spider):
 
 
 
+
     def parse_item_list(self,response):
         items = response.xpath('//a/@href').extract()
         for i in items:
-            if i.find('http://book.douban.com/subject')>-1:
+            if re.match(self.url_regex,i):
                 yield scrapy.Request(i,callback=self.parse_item)
 
 
@@ -41,14 +46,14 @@ class DoubanSpider(scrapy.Spider):
         item['author_intro'] = self.get_content(intro[1])
         item['tags'] = response.xpath('//div[@id="db-tags-section"]/div[@class="indent"]/span/a/text()').extract()
         item['score']=response.xpath('//div[@id="interest_sectl"]/div/div/strong/text()').extract()[0]
-        item['comment_num']=response.xpath('//span/a[@class="rating_people"]/text()').extract()[0]
+        item['comment_num']=response.xpath('//span/a[@class="rating_people"]/span[@property="v:votes"]/text()').extract()[0]
         info_selector = response.xpath('//div[@id="info"]')
         self.fillinfo(item,info_selector)
         self.fillinfo1(item,info_selector)
         yield item
         items = response.xpath('//a/@href').extract()
         for i in items:
-            if i.find('http://book.douban.com/subject')>-1:
+            if re.match(self.url_regex,i):
                 yield scrapy.Request(i,callback=self.parse_item)
 
 
